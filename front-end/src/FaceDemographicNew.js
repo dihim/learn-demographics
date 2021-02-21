@@ -40,7 +40,6 @@ export default class FaceDemographic extends React.Component {
   render() {
     return (
       <div>
-        <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"/> 
         <form onSubmit={this.handleSubmit}>
           <label>
             Person Name:
