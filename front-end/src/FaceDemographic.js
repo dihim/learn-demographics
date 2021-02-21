@@ -1,8 +1,11 @@
 import React from 'react';
 import {
-  Container,
-  Grid,
-  makeStyles
+  Card,
+  Box,
+  makeStyles,
+  Avatar,
+  Divider,
+  TextField
 } from '@material-ui/core';
 
 const useStyles = makeStyles(() => ({
@@ -14,9 +17,18 @@ const FaceDemographic = () => {
   const classes = useStyles();
 
   return (
-    <div>
-
-    </div>
+    <Box display="flex" justifyContent="center" alignItems="center">
+      <Box>
+      <Card>
+        <Avatar>
+        </Avatar>
+        <Divider/>
+        <TextField/>
+      </Card>
+      <Card>
+      </Card>
+      </Box>
+    </Box>
   );
 };
 

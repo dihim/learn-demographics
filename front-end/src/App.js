@@ -1,4 +1,4 @@
-import FaceDemographic from './FaceDemographicNew.js'
+import FaceDemographic from './FaceDemographic.js'
 
 function App() {
   return (
