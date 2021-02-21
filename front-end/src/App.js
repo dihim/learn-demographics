@@ -1,10 +1,14 @@
 import FaceDemographic from './FaceDemographic.js'
+import { SnackbarProvider, useSnackbar } from "notistack";
 
 function App() {
   return (
-    <div className="App">
-      <FaceDemographic/>
-    </div>
+    <SnackbarProvider>
+      <div style={{height: "100%"}} className="App">
+        <FaceDemographic/>
+      </div>
+    </SnackbarProvider>
+
   );
 }
 
