@@ -4,6 +4,8 @@ import {useSnackbar} from "notistack"
 import Chart from "react-apexcharts";
 import ThumbUpIcon from '@material-ui/icons/ThumbUp';
 import ThumbDownIcon from '@material-ui/icons/ThumbDown';
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 import {
   Card,
   Box,
@@ -172,8 +174,7 @@ const FaceDemographic = () => {
     return prediction.map((face) => (
         <Card style={{margin: "1em"}} >
           <Box minWidth="150px" flexDirection="column" flexWrap="wrap"  minHeight="200px">
-          <Box width="150px" height="150px">
-          </Box>
+          <Avatar variant="rounded" style={{width:"150px", height:"150px"}}/>
           <Box display="flex" flexDirection="row" justifyContent="space-evenly" alignItems="center">
             <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center">
               <Typography variant="h6">
