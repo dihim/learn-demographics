@@ -4,3 +4,7 @@ ssh -i ageandgenderkey.pem ec2-user@dns-name
 docker run --rm -it -p 80:80/tcp ageandgenderapi:latest
 # how to build
 docker build . -t ageandgenderapi
+#copy file to docker
+scp -i ageandgenderkey.pem ../haarcascade_frontalface_default.xml ec2-user@ec2-34-201-161-82.compute-1.amazonaws.com:/home/ec2-user
+scp -i ageandgenderkey.pem ../app.py ec2-user@ec2-34-201-161-82.compute-1.amazonaws.com:/home/ec2-user
+ssh -i ageandgenderkey.pem ec2-user@ec2-34-201-161-82.compute-1.amazonaws.com
