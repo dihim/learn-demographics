@@ -67,20 +67,33 @@ def upload_file():
 def get_prediction(image_path):
     # Works only for a single sample
     img = cv2.imread(image_path)
-    # the model takes specific inputs
-    img = cv2.resize(img, (224, 224)) #img shape is (224, 224, 3) now
-    img_blob = cv2.dnn.blobFromImage(img) # img_blob shape is (1, 3, 224, 224)
+
+    # get all the faces
+    haar_detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+    def detect_faces(img):
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        faces = haar_detector.detectMultiScale(gray, 1.3, 5)
+        return faces
     
-    age_model.setInput(img_blob)
-    age_dist = age_model.forward()[0]
-    gender_model.setInput(img_blob)
-    gender_class = gender_model.forward()[0]
-    
-    
-    output_indexes = np.array([i for i in range(0, 101)])
-    age = round(np.sum(age_dist * output_indexes), 2)
-    gender = 'Woman' if np.argmax(gender_class) == 0 else 'Man'
-    return (age, gender)
+    faces = detect_faces(img)
+    results = []
+    for x, y, w, h in faces:
+        detected_face = img[int(y):int(y+h), int(x):int(x+w)]
+        # the model takes specific inputs
+        detect_faces = cv2.resize(detect_faces, (224, 224)) #img shape is (224, 224, 3) now
+        img_blob = cv2.dnn.blobFromImage(detect_faces) # img_blob shape is (1, 3, 224, 224)
+        
+        age_model.setInput(img_blob)
+        age_dist = age_model.forward()[0]
+        gender_model.setInput(img_blob)
+        gender_class = gender_model.forward()[0]
+        
+        
+        output_indexes = np.array([i for i in range(0, 101)])
+        age = round(np.sum(age_dist * output_indexes), 2)
+        gender = 'Woman' if np.argmax(gender_class) == 0 else 'Man'
+        results.append((age,gender,gender_class[1]))
+    return results
 
 if __name__ == '__main__':
     print('Hello world', file=sys.stderr)
