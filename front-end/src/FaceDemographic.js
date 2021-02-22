@@ -2,6 +2,8 @@ import React from 'react';
 import axios from 'axios';
 import {useSnackbar} from "notistack"
 import Chart from "react-apexcharts";
+import ThumbUpIcon from '@material-ui/icons/ThumbUp';
+import ThumbDownIcon from '@material-ui/icons/ThumbDown';
 import {
   Card,
   Box,
@@ -11,7 +13,8 @@ import {
   Typography,
   Button,
   TextField,
-  CircularProgress
+  CircularProgress,
+  IconButton
 } from '@material-ui/core';
 
 const useStyles = makeStyles(() => ({
@@ -65,7 +68,7 @@ const FaceDemographic = () => {
  
   var options = {
     series: [{
-    name: 'Inflation',
+    name: 'Frequency',
     data: ageDistribution
   }],
     chart: {
@@ -182,10 +185,19 @@ const FaceDemographic = () => {
               {ageBuckets(face.age)}
               </Typography>
             </Box>
+            
+          </Box>
+          <Box display="flex" flexDirection="row" justifyContent="space-evenly" alignItems="center">
+              <IconButton onClick={report}><ThumbUpIcon/></IconButton>
+              <IconButton onClick={report}><ThumbDownIcon/></IconButton>
           </Box>
           </Box>
       </Card>
     ))
+  }
+
+  function report(x) {
+    enqueueSnackbar("Thanks for the feedback",{variant: 'success'})
   }
 
   async function requestAgeGender() {
