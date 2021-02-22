@@ -80,7 +80,7 @@ def get_prediction():
             output_indexes = np.array([i for i in range(0, 101)])
             age = round(np.sum(age_dist * output_indexes), 2)
             gender = 'Woman' if np.argmax(gender_class) == 0 else 'Man'
-            results.append({"age":age,"gender":gender,"gender confidence":"{}".format(gender_class[1])})
+            results.append({"age":age,"gender":gender,"bbox":{"x":str(x),"y":str(y),"w":str(w),"h":str(h)},"gender confidence":"{}".format(gender_class[1])})
         return jsonify(results)
     return 'Not a post...'
 if __name__ == '__main__':
