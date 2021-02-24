@@ -169,7 +169,8 @@ const FaceDemographic = () => {
     setAgeDistribution(ageRanges)
     setGenderDistribution(gender)
   }
-//new build
+  
+//new builds
   function displayFaces(){
     return prediction.map((face) => (
         <Card style={{margin: "1em"}} >
