@@ -173,7 +173,7 @@ const FaceDemographic = () => {
   function displayFaces(){
     return prediction.map((face) => (
         <Card style={{margin: "1em"}} >
-          <Box minWidth="150px" flexDirection="column" flexWrap="wrap"  minHeight="200px">
+          <Box minWidth="150px" display="flex" flexDirection="column" flexWrap="wrap" justifyContent="center" minHeight="200px">
           <Avatar variant="rounded" style={{width:"150px", height:"150px"}}/>
           <Box display="flex" flexDirection="row" justifyContent="space-evenly" alignItems="center">
             <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center">
@@ -192,6 +192,20 @@ const FaceDemographic = () => {
               <IconButton onClick={report}><ThumbUpIcon/></IconButton>
               <IconButton onClick={report}><ThumbDownIcon/></IconButton>
           </Box>
+          <Box display="flex" flexwrap="wrap" flexDirection="column" justifyContent="space-evenly" alignItems="center">
+              <Typography>
+              Gender Confidence: 
+                </Typography> 
+              {(face.gender == "Man" ? face["gender confidence"] : 1 - face["gender confidence"] )}
+          </Box>
+          <Box display="flex" flexwrap="wrap" flexDirection="column" justifyContent="space-evenly" alignItems="center">
+          <Typography>
+          Face position:
+          </Typography>
+           X: {face.bbox.x}, Y: {face.bbox.y}, 
+           <Typography/>
+           Height: {face.bbox.h}, Width: {face.bbox.w}
+          </Box>
           </Box>
       </Card>
     ))
@@ -206,7 +220,7 @@ const FaceDemographic = () => {
     enqueueSnackbar("Request Sent",{variant: 'default'})
     try {
     const json = JSON.stringify({ urls: [url] });
-    const res = await axios.post('https://cors-everywhere-me.herokuapp.com/http://ec2-34-201-161-82.compute-1.amazonaws.com/predict', json, {
+    const res = await axios.post('https://cors-everywhere-me.herokuapp.com/http://ec2-54-160-102-240.compute-1.amazonaws.com/predict', json, {
     headers: {
       // Overwrite Axios's automatically set Content-Type
       'Content-Type': 'application/json'
