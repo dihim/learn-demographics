@@ -25,7 +25,7 @@ export default class FaceDemographic extends React.Component {
       })
       */
      const json = JSON.stringify({ urls: [this.state.urls] });
-      const res = await axios.post('https://cors-everywhere-me.herokuapp.com/http://ec2-54-160-102-240.compute-1.amazonaws.com/predict', json, {
+      const res = await axios.post('https://cors-everywhere-me.herokuapp.com/http://ec2-34-201-161-82.compute-1.amazonaws.com/predict', json, {
       headers: {
         // Overwrite Axios's automatically set Content-Type
         'Content-Type': 'application/json'
