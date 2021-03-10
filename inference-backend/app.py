@@ -121,6 +121,8 @@ def get_prediction(testurls = None):
         malePercentage = sumMaleCount/(allPeopleSum) * 100
         femalePercentage = 100 - malePercentage
         
+        if sumMaleCount == 0: sumMaleCount = 1
+        if sumFemaleCount == 0: sumFemaleCount = 1
         percentageMale = [x/sumMaleCount * 100 for x in maleCount]
         percentageFemale = [x/sumFemaleCount * 100 for x in femaleCount]
         percentageWhole = [((a+b)/allPeopleSum) * 100 for a, b in zip(maleCount, femaleCount)]
