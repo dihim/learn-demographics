@@ -311,7 +311,6 @@ const FaceDemographic = () => {
   function displayFaces(){
     if (!prediction) return ''
     let faces = []
-    console.log(prediction)
     prediction.detections.images.forEach((image,index) => {
       let url = urls[index]
       image.faces.forEach(face => {
@@ -319,7 +318,6 @@ const FaceDemographic = () => {
         faces.push(face)
       })
     })
-    console.log(faces)
     return faces.map((face) => (
         <Card style={{margin: "1em"}} >
           <Box>
@@ -346,7 +344,6 @@ const FaceDemographic = () => {
           <Box display="flex" flexwrap="wrap" flexDirection="column" justifyContent="space-evenly" alignItems="center">
               <Typography>
               Gender Confidence: 
-              {console.log(face["gender-confidence"])}
                 </Typography> 
               {(face.gender == "Man" ? (face["gender-confidence"]) : (1 - face["gender-confidence"]))}
           </Box>

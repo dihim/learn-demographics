@@ -27,7 +27,7 @@ const getCroppedImage = (url,bbox) => {
         margin: `-${bbox.y}px 0 0 -${bbox.x}px`,
     }
     return (
-        
+            
               <div style={divStyle}>
                     <img src={url} style={imgStyle}/>
                 </div>
