@@ -2,7 +2,6 @@
 ssh -i ageandgenderkey.pem ec2-user@dns-name
 # start up the docker again
 docker run --rm -it -p 80:80/tcp ageandgenderapi:latest
-
 # how to build
 docker build . -t ageandgenderapi
 #copy file to docker
