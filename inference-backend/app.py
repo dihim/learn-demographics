@@ -48,7 +48,7 @@ def upload_file():
 
 @app.route('/predict', methods=['POST'])
 @cross_origin()
-def get_prediction():
+def get_prediction(testurls = None):
     def ageIndex(age):
         # 12 and under, 13-17, 18-24, 25-34, 35-44, 45-54, 55-64, 65+
         if age < 13:
@@ -86,6 +86,8 @@ def get_prediction():
         maleCount = [0 for i in range(8)]
         femaleCount = [0 for i in range(8)]
         imagesresults = []
+        if(testurls != None):
+            urls = testurls
         for url in urls:
             img = url_to_image(url)
             faces = detect_faces(img)
@@ -119,9 +121,9 @@ def get_prediction():
         malePercentage = sumMaleCount/(allPeopleSum) * 100
         femalePercentage = 100 - malePercentage
         
-        percentageMale =  (maleCount/sumMaleCount) * 100
-        percentageFemale = (femaleCount/sumFemaleCount) * 100
-        percentageWhole = (maleCount + femaleCount)/(allPeopleSum) * 100
+        percentageMale = [x/sumMaleCount * 100 for x in maleCount]
+        percentageFemale = [x/sumFemaleCount * 100 for x in femaleCount]
+        percentageWhole = [((a+b)/allPeopleSum) * 100 for a, b in zip(maleCount, femaleCount)]
 
         results = {
             "demographics": {
@@ -145,7 +147,6 @@ def get_prediction():
                 "images": imagesresults
             }
         }
-        
         return jsonify(results)
     return 'Not a post...'
 if __name__ == '__main__':
