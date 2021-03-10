@@ -10,6 +10,23 @@ from werkzeug.utils import secure_filename
 import urllib
 import urllib.request
 
+"""
+API:
+Request
+{
+    demographics: {
+        gender: {},
+        age: {}
+    },
+    detections: {
+        images: [
+            {
+                faces: []
+            }
+        ]
+    }
+}
+"""
 
 # METHOD #1: OpenCV, NumPy, and urllib
 def url_to_image(url):

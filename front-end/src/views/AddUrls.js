@@ -6,6 +6,11 @@ import ThumbUpIcon from '@material-ui/icons/ThumbUp';
 import ThumbDownIcon from '@material-ui/icons/ThumbDown';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import AddIcon from '@material-ui/icons/Add';
+import CloseIcon from '@material-ui/icons/Close';
+import Highcharts from 'highcharts'
+import HighchartsReact from 'highcharts-react-official'
+
 import {
   Card,
   Box,
@@ -13,11 +18,13 @@ import {
   Avatar,
   Divider,
   Typography,
+  Paper,
   Button,
   TextField,
   CircularProgress,
   IconButton
 } from '@material-ui/core';
+import { Filter } from '@material-ui/icons';
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -30,7 +37,20 @@ const FaceDemographic = () => {
   const [ageDistribution, setAgeDistribution] = React.useState([0, 0, 0, 0, 0, 0, 0, 0])
   const [prediction, setPrediction] = React.useState([])
   const [loadingPrediction, setLoadingPrediction] = React.useState(false)
-  const [url, setUrl] = React.useState("")
+  const [url, setUrl] = React.useState('')
+  const [urls, setUrls] = React.useState([])
+  Highcharts.setOptions({credits: false})
+  const highOptions = {
+    title: {
+      text: 'My chart'
+    },
+    series: [{
+      data: [1, 2, 3]
+    }],
+    credits: {
+      enabled: false
+    }
+  }
   const piestate = {
     series: genderDistribution,
     options: {
@@ -147,7 +167,6 @@ const FaceDemographic = () => {
   }
 
   function calcStats(predictions) {
-    console.log("see")
     let ageRanges = [0, 0, 0, 0, 0, 0, 0, 0]
     let gender = [0, 0]
     predictions.forEach(stat => {
@@ -169,8 +188,42 @@ const FaceDemographic = () => {
     setAgeDistribution(ageRanges)
     setGenderDistribution(gender)
   }
-  
-//new builds
+
+  /**
+   * Adds urls the user writes to list of 
+   * urls
+   */
+  function addUrl(){
+    setUrls([...urls, url])
+    setUrl('')
+  }
+
+  /**
+   * Remove Url
+   */
+  function removeUrl(targetIndex) {
+    setUrls((values) => urls.filter((url, index) => index != targetIndex))
+  }
+
+  /**
+   * Displays the photos form the 
+   * enter url 
+   */
+  function displayPhotos(){
+    if (urls.length == 0) return ""
+    return urls.map((url, index) =>  (
+      <Box key={index} mx={"1em"} maxWidth="300px" minWidth="300px">
+              <Paper elevation={0}  style={{width: "100%",}} >
+                <Box width="100%" alignItems="center" style={{marginLeft: "auto", display: "flex"}}>
+                  <b style={{marginLeft: "5px"}}>#{index + 1}</b> <IconButton onClick={() =>removeUrl(index)} style={{color: "#d11a2a", marginLeft: "auto"}} size="small"> <CloseIcon/> </IconButton>
+                </Box>
+              </Paper>
+              <Avatar src={url} style={{width: "100%", height: "300px"}} variant="square"/>
+            </Box>
+    ))
+  }
+
+//new builds0
   function displayFaces(){
     return prediction.map((face) => (
         <Card style={{margin: "1em"}} >
@@ -216,12 +269,16 @@ const FaceDemographic = () => {
     enqueueSnackbar("Thanks for the feedback",{variant: 'success'})
   }
 
-  async function requestAgeGender() {
+  async function requestDemographics() {
+    if (urls.length == 0) {
+      enqueueSnackbar("No url(s) were added",{variant: 'default'})
+      return
+    }
     setLoadingPrediction(true)
     enqueueSnackbar("Request Sent",{variant: 'default'})
     try {
-    const json = JSON.stringify({ urls: [url] });
-    const res = await axios.post('https://cors-everywhere-me.herokuapp.com/http://ec2-54-160-102-240.compute-1.amazonaws.com/predict', json, {
+    const json = JSON.stringify({ urls });
+    const res = await axios.post('https://cors-everywhere-me.herokuapp.com/http://ec2-54-173-167-91.compute-1.amazonaws.com/predict', json, {
     headers: {
       // Overwrite Axios's automatically set Content-Type
       'Content-Type': 'application/json'
@@ -230,13 +287,12 @@ const FaceDemographic = () => {
     console.log(res.status)
     if (res.status == 200) {
       console.log(res)
-      enqueueSnackbar("Image Classifed",{variant: 'success'})
+      enqueueSnackbar("Images Classifed",{variant: 'success'})
       setPrediction(res.data)
-      calcStats(res.data)
       setLoadingPrediction(false)
     }
   } catch(err) {
-    enqueueSnackbar("Invalid Image",{variant: 'error'})
+    enqueueSnackbar("Error with one of the images",{variant: 'error'})
     console.log(err)
     setLoadingPrediction(false)
     setPrediction({})
@@ -244,70 +300,38 @@ const FaceDemographic = () => {
   }
 
   return (
-    <Box height="100%" display="flex" justifyContent="center" alignItems="center">
-      <Box display="flex" flexWrap="wrap" flexDirection="row">
-      <Card style={{marginLeft: "2em"}}>
-        <Box width="500px" height="500px" display="flex" flexDirection="column" justifyContent="center" alignItems="center">
-          <Avatar src={url} style={{width: "490px", height:"490px"}} variant="rounded"/>
-        </Box>
-        <Divider/>
-        <Box >
-          <TextField 
-          fullWidth
-          value={url}
+    <div style={{display: "flex", width: "100%", justifyContent:"center"}}>
+      <div style={{display: "flex", height: "775px", flexDirection: "column", width:"1240px", maxWidth: "1240px"}}>
+        <Paper elevation={0} style={{width: "100%", justifyContent:"center", display: "flex", alignItems: "center", height: "64px", padding: "16px", marginTop: "1em"}}>
+          <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
+            <TextField value={url}
           onChange={
             (e) => {
               setUrl(e.target.value)
             }
           }
-          id="filled-required"
-          label="Enter Web Image URL"
-          defaultValue="Hello World"
-          placeholder=""
-          variant="filled"/>
-        </Box>
-        <Box>
-          <Button variant="contained" onClick={requestAgeGender} fullWidth>
-            Classify Age and Gender
-          </Button>
-        </Box>
-      </Card>
-      <Card style={{marginLeft: "2em", minWidth:"500px", display: "flex", flexDirection: "column", flexWrap:"wrap", overflow:"scroll"}}>
-          <Box display="flex" flexDirection="row" justifyContent="space-evenly" alignItems="center">
-            {(!loadingPrediction) ? 
-            <React.Fragment>
-               <Chart
-                options={piestate.options}
-                series={piestate.series}
-                type="pie"
-                width="200"
-              />
-               <Chart
-                options={options}
-                series={options.series}
-                type="bar"
-                width="300"
-                height="200"
-              />
-            </React.Fragment> 
-            :
-            <Box mt={"1em"}>
-              <CircularProgress/>
+          hiddenLabel InputProps={{ disableUnderline: true }} style={{width: "30em"}} variant="filled" placeholder="Enter web image url"/>
+            <IconButton onClick={addUrl} style={{marginLeft: ".25em", color: "black"}}> <AddIcon/> </IconButton>
+            { (!loadingPrediction) ? 
+            <Button disableElevation onClick={requestDemographics} style={{marginLeft: "2em"}} variant="contained" > <strong>Get Demographics</strong></Button>
+            : <CircularProgress color="black" />}
             </Box>
-            }
-          </Box>
-       
-      <Box  flexWrap="wrap" maxWidth="500px" maxHeight="490px" overflowy="scroll"  display="flex" flexDirection="row" justifyContent="center" alignItems="center">
-      {(!loadingPrediction && prediction[0] ) ? 
-        displayFaces() :
-        ""
-      }
-     
-      </Box>
+        </Paper>
 
-      </Card>
-      </Box>
-    </Box>
+        <Paper elevation={0} style={{overflowX: "scroll", width: "100%", minHeight: "300px", backgroundColor: "rgba(0, 0, 0, 0)",  paddingRight: "16px", paddingLeft: "16px", display: "flex", alignItems: "center", marginTop: "1em"}}>
+          <Box display="flex"  flexDirection="row" alignItems="center">
+            {displayPhotos}
+          </Box>
+        </Paper>
+        <Paper elevation={0} style={{width: "100%", minHeight: "300px",  paddingRight: "16px", paddingLeft: "16px", display: "flex", alignItems: "center", marginTop: "1em"}}>
+        <HighchartsReact
+          highcharts={Highcharts}
+          options={options}
+         />
+        </Paper>       
+
+      </div>
+    </div>
   );
 };
 
