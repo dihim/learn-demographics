@@ -1,6 +1,7 @@
 body {
   height: 100vh;
   background-color: rgba(65, 59, 59, 0.089);
+  margin: 0;
 }
 #root {
   height: 100vh;
