@@ -318,8 +318,8 @@ const FaceDemographic = () => {
         faces.push(face)
       })
     })
-    return faces.map((face) => (
-        <Card style={{margin: "1em"}} >
+    return faces.map((face, index) => (
+        <Card  key={index} style={{margin: "1em"}} >
           <Box>
           {getCroppedImage(face.url,face.bbox)}
           </Box>
@@ -375,6 +375,7 @@ const FaceDemographic = () => {
     enqueueSnackbar("Request Sent",{variant: 'default'})
     try {
     const json = JSON.stringify({ urls });
+    console.log("Request: ", json)
     const res = await axios.post('https://cors-everywhere-me.herokuapp.com/http://ec2-54-173-167-91.compute-1.amazonaws.com/predict', json, {
     headers: {
       // Overwrite Axios's automatically set Content-Type
