@@ -5,6 +5,7 @@ import Chart from "react-apexcharts";
 import ThumbUpIcon from '@material-ui/icons/ThumbUp';
 import ThumbDownIcon from '@material-ui/icons/ThumbDown';
 import ReactCrop from 'react-image-crop';
+import getCroppedImage from '../CropImageTest.js';
 import 'react-image-crop/dist/ReactCrop.css';
 import AddIcon from '@material-ui/icons/Add';
 import CloseIcon from '@material-ui/icons/Close';
@@ -311,16 +312,20 @@ const FaceDemographic = () => {
     if (!prediction) return ''
     let faces = []
     console.log(prediction)
-    prediction.detections.images.forEach((image) => {
+    prediction.detections.images.forEach((image,index) => {
+      let url = urls[index]
       image.faces.forEach(face => {
+        face['url'] = url
         faces.push(face)
       })
     })
     console.log(faces)
     return faces.map((face) => (
         <Card style={{margin: "1em"}} >
+          <Box>
+          {getCroppedImage(face.url,face.bbox)}
+          </Box>
           <Box minWidth="150px" display="flex" flexDirection="column" flexWrap="wrap" justifyContent="center" minHeight="200px">
-          <Avatar variant="rounded" style={{width:"150px", height:"150px"}}/>
           <Box display="flex" flexDirection="row" justifyContent="space-evenly" alignItems="center">
             <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center">
               <Typography variant="h6">
@@ -341,9 +346,11 @@ const FaceDemographic = () => {
           <Box display="flex" flexwrap="wrap" flexDirection="column" justifyContent="space-evenly" alignItems="center">
               <Typography>
               Gender Confidence: 
+              {console.log(face["gender-confidence"])}
                 </Typography> 
-              {(face.gender == "Man" ? face["gender-confidence"] : 1 - face["gender-confidence"] )}
+              {(face.gender == "Man" ? (face["gender-confidence"]) : (1 - face["gender-confidence"]))}
           </Box>
+          {/* 
           <Box display="flex" flexwrap="wrap" flexDirection="column" justifyContent="space-evenly" alignItems="center">
           <Typography>
           Face position:
@@ -352,6 +359,7 @@ const FaceDemographic = () => {
            <Typography/>
            Height: {face.bbox.h}, Width: {face.bbox.w}
           </Box>
+          */}
           </Box>
       </Card>
     ))
