@@ -34,11 +34,9 @@ const TopBar = () => {
       <Box style={{maxWidth: "1240px"}}  display="flex" flexDirection="row" alignItems="center" fontWeight="fontWeightBold"  width={1210}> 
         <Box display="flex" flexDirection="row" alignItems="center">
           <DonutLargeIcon fontSize="large"/>
-          <bold>
             <Typography style={{marginLeft: "10px"}} variant="h5">
               <strong>LearnDemographics</strong>
             </Typography>
-          </bold>
         </Box>
       </Box>
     </Paper>

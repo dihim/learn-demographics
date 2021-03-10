@@ -16,7 +16,6 @@ import {
   Box,
   makeStyles,
   Avatar,
-  Divider,
   Typography,
   Paper,
   Button,
@@ -35,22 +34,106 @@ const FaceDemographic = () => {
   const {enqueueSnackbar} = useSnackbar();
   const [genderDistribution, setGenderDistribution] = React.useState([0,0])
   const [ageDistribution, setAgeDistribution] = React.useState([0, 0, 0, 0, 0, 0, 0, 0])
-  const [prediction, setPrediction] = React.useState([])
+  const [prediction, setPrediction] = React.useState(null)
   const [loadingPrediction, setLoadingPrediction] = React.useState(false)
   const [url, setUrl] = React.useState('')
+  const [maleAgePercentage, setMaleAgePercentage] = React.useState([0,0,0,0,0,0,0])
+  const [femaleAgePercentage, setFemaleAgePercentage] = React.useState([0,0,0,0,0,0,0])
+  const [malePercentage, setMalePercentage] = React.useState(0)
+  const [femalePercentage, setFemalePercentage] = React.useState(0)
   const [urls, setUrls] = React.useState([])
   Highcharts.setOptions({credits: false})
   const highOptions = {
+    width: "1000",
     title: {
-      text: 'My chart'
+      text: ''
     },
-    series: [{
-      data: [1, 2, 3]
-    }],
-    credits: {
-      enabled: false
+    chart: {
+      type: 'column'
+  },
+  plotOptions: {
+    series: {
+        borderWidth: 0,
+        dataLabels: {
+            enabled: true,
+            format: '{point.y:.1f}%'
+        }
+    }
+  },
+  yAxis: {
+    max: 100,
+    gridLineWidth: 0,
+    gridLineColor: "white",
+    min: 0,
+    title: {
+        text: '',
+    },
+    labels: {
+        overflow: 'justify',
+        enabled: false
+    }
+    },
+    series: [
+      {
+        name: "Male",
+        data: maleAgePercentage
+      },
+      {
+        name: "Female",
+        data: femaleAgePercentage
+      }
+    ],
+    tooltip: { enabled: false },
+    xAxis: {
+      lineWidth: 0,
+      gridLineWidth: 0,
+      width: "500",
+      categories: ['-12', '13-17', '18-24', '25-34', '35-44', '45-54', '55-64',"65+"],
+      title: {
+          text: null
+      }
     }
   }
+
+  const pieOption = {
+    chart: {
+      plotBackgroundColor: null,
+      plotBorderWidth: null,
+      plotShadow: false,
+      type: 'pie'
+    },
+    title: {
+        text: ''
+    },
+    plotOptions: {
+      series: {
+          borderWidth: 0,
+          dataLabels: {
+              enabled: true,
+              format: '{point.name}: {point.y:.1f}%'
+          }
+      }
+    },
+    series: [{
+      colorByPoint: true,
+      data: [{
+          name: 'Male',
+          y: malePercentage,
+      }, {
+          name: 'Female',
+          y: femalePercentage
+      }]
+  }],
+    tooltip: {
+        enabled: false
+    },
+    accessibility: {
+        point: {
+            valueSuffix: '%'
+        }
+    },
+  }
+
   const piestate = {
     series: genderDistribution,
     options: {
@@ -225,7 +308,16 @@ const FaceDemographic = () => {
 
 //new builds0
   function displayFaces(){
-    return prediction.map((face) => (
+    if (!prediction) return ''
+    let faces = []
+    console.log(prediction)
+    prediction.detections.images.forEach((image) => {
+      image.faces.forEach(face => {
+        faces.push(face)
+      })
+    })
+    console.log(faces)
+    return faces.map((face) => (
         <Card style={{margin: "1em"}} >
           <Box minWidth="150px" display="flex" flexDirection="column" flexWrap="wrap" justifyContent="center" minHeight="200px">
           <Avatar variant="rounded" style={{width:"150px", height:"150px"}}/>
@@ -250,7 +342,7 @@ const FaceDemographic = () => {
               <Typography>
               Gender Confidence: 
                 </Typography> 
-              {(face.gender == "Man" ? face["gender confidence"] : 1 - face["gender confidence"] )}
+              {(face.gender == "Man" ? face["gender-confidence"] : 1 - face["gender-confidence"] )}
           </Box>
           <Box display="flex" flexwrap="wrap" flexDirection="column" justifyContent="space-evenly" alignItems="center">
           <Typography>
@@ -286,9 +378,13 @@ const FaceDemographic = () => {
     });
     console.log(res.status)
     if (res.status == 200) {
-      console.log(res)
+      console.log(res.data)
       enqueueSnackbar("Images Classifed",{variant: 'success'})
       setPrediction(res.data)
+      setMalePercentage(parseInt(res.data.demographics.gender.male))
+      setFemalePercentage(parseInt(res.data.demographics.gender.female))
+      setMaleAgePercentage(res.data.demographics.age.percentage.male)
+      setFemaleAgePercentage(res.data.demographics.age.percentage.female)
       setLoadingPrediction(false)
     }
   } catch(err) {
@@ -302,8 +398,9 @@ const FaceDemographic = () => {
   return (
     <div style={{display: "flex", width: "100%", justifyContent:"center"}}>
       <div style={{display: "flex", height: "775px", flexDirection: "column", width:"1240px", maxWidth: "1240px"}}>
-        <Paper elevation={0} style={{width: "100%", justifyContent:"center", display: "flex", alignItems: "center", height: "64px", padding: "16px", marginTop: "1em"}}>
-          <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
+        <Paper elevation={0} style={{width: "100%", justifyContent:"center", display: "flex", alignItems: "center", height: "150px", padding: "16px", marginTop: "1em"}}>
+          <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center">
+          <Box margin={"2em"} display="flex" flexDirection="row" justifyContent="center" alignItems="center">
             <TextField value={url}
           onChange={
             (e) => {
@@ -314,22 +411,33 @@ const FaceDemographic = () => {
             <IconButton onClick={addUrl} style={{marginLeft: ".25em", color: "black"}}> <AddIcon/> </IconButton>
             { (!loadingPrediction) ? 
             <Button disableElevation onClick={requestDemographics} style={{marginLeft: "2em"}} variant="contained" > <strong>Get Demographics</strong></Button>
-            : <CircularProgress color="black" />}
+            : <CircularProgress style={{color:"black", marginLeft: "1em"}} />}
+            </Box>
+            <Typography variant="caption">*Gender Prediction: This kind of prediction is not designed to categorize a person’s gender identity, and you shouldn't use Learn Demographics to make such a determination.
+            LearnDemographics use cases are where aggregate gender distribution statistics need to be analyzed without identifying specific users.</Typography>
             </Box>
         </Paper>
 
-        <Paper elevation={0} style={{overflowX: "scroll", width: "100%", minHeight: "300px", backgroundColor: "rgba(0, 0, 0, 0)",  paddingRight: "16px", paddingLeft: "16px", display: "flex", alignItems: "center", marginTop: "1em"}}>
+        <Paper elevation={0} style={{overflowX: "scroll", width: "100%", minHeight: "350px", backgroundColor: "rgba(0, 0, 0, 0)",  paddingRight: "16px", paddingLeft: "16px", display: "flex", alignItems: "center", marginTop: "1em"}}>
           <Box display="flex"  flexDirection="row" alignItems="center">
             {displayPhotos}
           </Box>
         </Paper>
-        <Paper elevation={0} style={{width: "100%", minHeight: "300px",  paddingRight: "16px", paddingLeft: "16px", display: "flex", alignItems: "center", marginTop: "1em"}}>
-        <HighchartsReact
-          highcharts={Highcharts}
-          options={options}
-         />
-        </Paper>       
-
+        <Paper elevation={0} style={{width: "100%", padding: "15px", minHeight: "400px", justifyContent: "center",  paddingRight: "16px", paddingLeft: "16px", display: "flex", alignItems: "center", marginTop: "1em"}}>
+          <HighchartsReact
+            highcharts={Highcharts}
+            options={pieOption}
+          />
+          <HighchartsReact
+            highcharts={Highcharts}
+            options={highOptions}
+          />
+        </Paper>  
+        <Paper elevation={0} style={{overflowX: "scroll", width: "100%", minHeight: "500px", backgroundColor: "rgba(0, 0, 0, 0)",  paddingRight: "16px", paddingLeft: "16px", display: "flex", alignItems: "center", marginTop: "1em"}}>
+          <Box display="flex"  flexDirection="row" alignItems="center">
+          {displayFaces()}
+          </Box>
+        </Paper>   
       </div>
     </div>
   );
