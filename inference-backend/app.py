@@ -5,6 +5,7 @@ import argparse
 import cv2
 import os
 import sys
+from PIL import Image
 from flask import Flask, flash, jsonify, request, redirect, url_for, render_template
 from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
@@ -110,7 +111,7 @@ def get_prediction(testurls = None):
         if(testurls != None):
             urls = testurls
         for url in urls:
-            img = Image.open(urllib.request.urlopen(url))
+            img = Image.open(urllib.request.urlopen(url)).convert("RGB")
             faces = mtcnn(img)
             boxes = mtcnn.detect(img)
             facesresults = []
@@ -123,6 +124,7 @@ def get_prediction(testurls = None):
                 detected_face = np.array(faces[count])
                 count += 1
                 # the model takes specific inputs
+                detected_face = np.transpose(detected_face, (1, 2, 0))
                 detected_face = cv2.resize(detected_face, (224, 224)) #img shape is (224, 224, 3) now
                 img_blob = cv2.dnn.blobFromImage(detected_face) # img_blob shape is (1, 3, 224, 224)
                 
