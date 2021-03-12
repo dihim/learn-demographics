@@ -1,4 +1,5 @@
 # import the necessary packages
+from facenet_pytorch import MTCNN, InceptionResnetV1
 import numpy as np
 import argparse
 import cv2
@@ -9,6 +10,7 @@ from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 import urllib
 import urllib.request
+
 
 """
 API:
@@ -91,9 +93,11 @@ def get_prediction(testurls = None):
         print(urls)
         #Works only for a single sample
         #img = url_to_image(urls[0])
+        #haar_detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
+        mtcnn = MTCNN(keep_all=True, post_process=False, image_size=200, margin=40)
+        
 
-        haar_detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
         def detect_faces(img):
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             faces = haar_detector.detectMultiScale(gray, 1.3, 5)
@@ -106,11 +110,18 @@ def get_prediction(testurls = None):
         if(testurls != None):
             urls = testurls
         for url in urls:
-            img = url_to_image(url)
-            faces = detect_faces(img)
+            img = Image.open(urllib.request.urlopen(url))
+            faces = mtcnn(img)
+            boxes = mtcnn.detect(img)
             facesresults = []
-            for x, y, w, h in faces:
-                detected_face = img[int(y):int(y+h), int(x):int(x+w)]
+            count = 0
+            for box in boxes:
+                x = box[0]
+                y = box[1]
+                w = box[2] - box[0]
+                h = box[3] - box[1]
+                detected_face = np.array(faces[count])
+                count += 1
                 # the model takes specific inputs
                 detected_face = cv2.resize(detected_face, (224, 224)) #img shape is (224, 224, 3) now
                 img_blob = cv2.dnn.blobFromImage(detected_face) # img_blob shape is (1, 3, 224, 224)
@@ -119,7 +130,6 @@ def get_prediction(testurls = None):
                 age_dist = age_model.forward()[0]
                 gender_model.setInput(img_blob)
                 gender_class = gender_model.forward()[0]
-                
                 
                 output_indexes = np.array([i for i in range(0, 101)])
                 age = round(np.sum(age_dist * output_indexes), 2)
