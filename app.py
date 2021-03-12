@@ -4,8 +4,23 @@ import cv2
 import os
 import sys
 from flask import Flask, flash, request, redirect, url_for, render_template
-
 from werkzeug.utils import secure_filename
+
+from facenet_pytorch import MTCNN, InceptionResnetV1
+import torch
+from torch.utils.data import DataLoader
+from torchvision import datasets
+import pandas as pd
+from faceDetectionDataset import FaceDetectionDataset
+workers = 0 if os.name == 'nt' else 4
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+print('Running on device: {}'.format(device))
+mtcnn = MTCNN(
+    image_size=160, margin=0, min_face_size=20,
+    thresholds=[0.6, 0.7, 0.7], factor=0.709, post_process=True,
+    device=device
+)
+def detect_faces(img):
 
 #defining prototext and caffemodel paths
 caffeModel = "./gender.caffemodel"
@@ -70,10 +85,10 @@ def get_prediction(image_path):
 
     # get all the faces
     haar_detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
-    def detect_faces(img):
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        faces = haar_detector.detectMultiScale(gray, 1.3, 5)
-        return faces
+    # def detect_faces(img):
+    #     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    #     faces = haar_detector.detectMultiScale(gray, 1.3, 5)
+    #     return faces
     
     faces = detect_faces(img)
     results = []
