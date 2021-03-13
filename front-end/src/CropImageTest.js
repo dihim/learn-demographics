@@ -15,15 +15,15 @@ const getCroppedImage = (url,bbox) => {
     var scale = neededWidth/parseInt(bbox.w)
     var divStyle = {
         position: "relative",
-        width: `${neededWidth}px`,
-        height: `${neededWidth}px`,
+        width: `${bbox.w}px`,
+        height: `${bbox.h}px`,
         overflow: "hidden",
         //transform: `scale(${scale}) translate(${neededWidth/2 }px, ${neededWidth/2 }px)`,
         
       }
     var imgStyle = {
         position: "absolute",
-        transform: `scale(${scale})`,
+        //transform: `scale(${scale})`,
         margin: `-${bbox.y}px 0 0 -${bbox.x}px`,
     }
     return (

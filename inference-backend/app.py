@@ -11,42 +11,27 @@ from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 import urllib
 import urllib.request
-
-
-"""
-API:
-Request
-{
-    demographics: {
-        gender: {},
-        age: {}
-    },
-    detections: {
-        images: [
-            {
-                faces: []
-            }
-        ]
-    }
-}
-"""
-
-# METHOD #1: OpenCV, NumPy, and urllib
-def url_to_image(url):
-	# download the image, convert it to a NumPy array, and then read
-	# it into OpenCV format
-	resp = urllib.request.urlopen(url)
-	image = np.asarray(bytearray(resp.read()), dtype="uint8")
-	image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-	# return the image
-	return image
-
-age_model = None
-gender_model = None
+import logging
+import uuid
 
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
+
+def setup_logger(name, log_file, level=logging.INFO):
+    """To setup as many loggers as you want"""
+    handler = logging.FileHandler(log_file)        
+    handler.setFormatter(formatter)
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    logger.addHandler(handler)
+    return logger
+    
+# Set pipeline logs
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+input_logger = setup_logger('Input service', '.\monitor\logs\input.log')
+model_logger = setup_logger('Model service', '.\monitor\logs\model.log')
+output_logger = setup_logger('Model service', '.\monitor\logs\output.log')
 
 def load_model():
     global age_model
@@ -54,18 +39,11 @@ def load_model():
     age_model = cv2.dnn.readNetFromCaffe("./model/age/age.prototxt.txt", "./model/age/age.caffemodel")
     gender_model = cv2.dnn.readNetFromCaffe("./model/gender/gender.prototxt.txt", "./model/gender/gender.caffemodel")
 
-ALLOWED_EXTENSIONS = ['jpg','png']
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-# Home endpoint
 @cross_origin()
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():    
-    return 'you know the vibes'
+    return 'Learn Demographics API'
     
-
 @app.route('/predict', methods=['POST'])
 @cross_origin()
 def get_prediction(testurls = None):
@@ -87,60 +65,100 @@ def get_prediction(testurls = None):
             return 6
         elif age > 64:
             return 7
-
+    request_id = str(uuid.uuid4())
+    input_logger.info(request_id + ": Request Received")
     if request.method == 'POST':
+        # Log incoming request and data passed
         data = request.get_json()
+        input_logger.info(request_id + ": Request Input Data: " + str(data))
         urls = data["urls"]
-        print(urls)
-        #Works only for a single sample
-        #img = url_to_image(urls[0])
-        #haar_detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
-        mtcnn = MTCNN(keep_all=True, post_process=False, image_size=200, margin=40)
-        
+        # Initialize model to detect faces
+        try:
+            mtcnn = MTCNN(keep_all=True, post_process=False, image_size=200, margin=40)
+        except:
+            model_logger.error(request_id + ": MTCNN model didn't initialize")
 
-        def detect_faces(img):
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            faces = haar_detector.detectMultiScale(gray, 1.3, 5)
-            return faces
+        if(testurls != None):
+            urls = testurls
         
-        
+        # Init variables to hold stats/images
         maleCount = [0 for i in range(8)]
         femaleCount = [0 for i in range(8)]
         imagesresults = []
-        if(testurls != None):
-            urls = testurls
+        
+        # Iterate through urls and detect faces' age and gender
         for url in urls:
-            img = Image.open(urllib.request.urlopen(url)).convert("RGB")
-            faces = mtcnn(img)
-            boxes = mtcnn.detect(img)
+            # Convert web image to local img
+            try:
+                img = Image.open(urllib.request.urlopen(url)).convert("RGB")
+            except:
+                model_logger.error(request_id + ": Converting Url web image to local Img. Url: " + url)
+
+            # Detect faces witihn image
+            try:
+                faces = mtcnn(img)
+            except:
+                model_logger.error(request_id + ": MTCNN Detecting Faces. Url: " + url)
+            
+            # Detect Bboxes for each image
+            try:
+                # boxes return an array of [x1, y1, x2, y2]
+                boxes, prob = mtcnn.detect(img)
+            except:
+                model_logger.error(request_id + ": MTCNN Detecting Bounding Box. Url: " + url)
+            
             facesresults = []
-            count = 0
+            index = 0
+
             for box in boxes:
-                x = box[0]
-                y = box[1]
-                w = box[2] - box[0]
-                h = box[3] - box[1]
-                detected_face = np.array(faces[count])
-                count += 1
-                # the model takes specific inputs
-                detected_face = np.transpose(detected_face, (1, 2, 0))
-                detected_face = cv2.resize(detected_face, (224, 224)) #img shape is (224, 224, 3) now
-                img_blob = cv2.dnn.blobFromImage(detected_face) # img_blob shape is (1, 3, 224, 224)
+                # Computing bounding box
+                try:
+                    x = box[0]
+                    y = box[1]
+                    w = box[2] - box[0]
+                    h = box[3] - box[1]
+                    detected_face = np.array(faces[index])
+                except:
+                    model_logger.error(request_id + ": Computing bounding box. Box:" + box + ". Url" + url)
+                index += 1
+
+                # Image tranformation to fit models: the model takes specific inputs
+                try:
+                    detected_face = np.transpose(detected_face, (1, 2, 0))
+                    detected_face = cv2.resize(detected_face, (224, 224)) #img shape is (224, 224, 3) now
+                    img_blob = cv2.dnn.blobFromImage(detected_face) # img_blob shape is (1, 3, 224, 224)
+                except:
+                    model_logger.error(request_id + ": Issue transforming image. Box: " + box + ". Url:" + url)
                 
-                age_model.setInput(img_blob)
-                age_dist = age_model.forward()[0]
-                gender_model.setInput(img_blob)
-                gender_class = gender_model.forward()[0]
+                # Age model
+                try:
+                    age_model.setInput(img_blob)
+                    age_dist = age_model.forward()[0]
+                except:
+                    model_logger.error(request_id + ": Issue transforming image. Box: " + box + ". Url:" + url)
+                    
+                # Gender model
+                try:
+                    gender_model.setInput(img_blob)
+                    gender_class = gender_model.forward()[0]
+                except:
+                    model_logger.error(request_id + ": Issue transforming image. Box: " + box + ". Url:" + url)
                 
-                output_indexes = np.array([i for i in range(0, 101)])
-                age = round(np.sum(age_dist * output_indexes), 2)
-                gender = 'Woman' if np.argmax(gender_class) == 0 else 'Man'
-                if gender == 'Man':
-                    maleCount[ageIndex(age)] += 1
-                else:
-                    femaleCount[ageIndex(age)] += 1
-                facesresults.append({"age":age,"gender":gender,"bbox":{"x":str(x),"y":str(y),"w":str(w),"h":str(h)},"gender-confidence":"{}".format(gender_class[1])})
+                 # Gender model
+                try:
+                    output_indexes = np.array([i for i in range(0, 101)])
+                    age = round(np.sum(age_dist * output_indexes), 2)
+                    gender = 'Woman' if np.argmax(gender_class) == 0 else 'Man'
+                    if gender == 'Man':
+                        maleCount[ageIndex(age)] += 1
+                    else:
+                        femaleCount[ageIndex(age)] += 1
+                except:
+                    model_logger.error(request_id + ": Issue with age. Box: " + box + ". Url:" + url)
+                genderCon = str((round(gender_class[1], 3)))
+                print(genderCon)
+                facesresults.append({"age":age,"gender":gender,"bbox":{"x":str(x),"y":str(y),"w":str(w),"h":str(h)},"gender-confidence":"{}".format(genderCon)})
             imagesresults.append({"faces":facesresults})
 
         # use maleCount and femaleCount to get statistics
@@ -179,10 +197,11 @@ def get_prediction(testurls = None):
                 "images": imagesresults
             }
         }
+        output_logger.info(request_id + ": Output Prediction" + str(results))
         return jsonify(results)
-    return 'Not a post...'
+    return "Didn't recieve POST request"
 if __name__ == '__main__':
-    print('Hello world1', file=sys.stderr)
+    print('Starting API', file=sys.stderr)
     load_model()  # load model at the beginning once only
     app.run(host='0.0.0.0', port=80)
     

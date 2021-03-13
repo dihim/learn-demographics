@@ -11,9 +11,10 @@ import AddIcon from '@material-ui/icons/Add';
 import CloseIcon from '@material-ui/icons/Close';
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
-
+import InfoIcon from '@material-ui/icons/Info';
 import {
   Card,
+  Link,
   Box,
   makeStyles,
   Avatar,
@@ -319,44 +320,58 @@ const FaceDemographic = () => {
       })
     })
     return faces.map((face, index) => (
-        <Card  key={index} style={{margin: "1em"}} >
-          <Box>
-          {getCroppedImage(face.url,face.bbox)}
+        <Card  key={index}  style={{margin: "1em", padding: "10px"}} >
+          <Box  display="flex" flexDirection="row" justifyContent="center" alignItems="center" width={"100%"}>
+            {getCroppedImage(face.url,face.bbox)}
           </Box>
-          <Box minWidth="150px" display="flex" flexDirection="column" flexWrap="wrap" justifyContent="center" minHeight="200px">
-          <Box display="flex" flexDirection="row" justifyContent="space-evenly" alignItems="center">
-            <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center">
-              <Typography variant="h6">
-                {face.gender}
-              </Typography>
+          <Box minWidth="250px" display="flex" flexDirection="column" flexWrap="wrap"  alignItems="center" marginTop={"1em"} paddingBottom="10px">
+            <Box width={"100%"} display="flex" flexDirection="row" justifyContent="space-evenly" alignItems="center">
+              <Box  display="flex" justifyContent="center" alignItems="center">
+                <Typography variant="caption">
+                  Prediction
+                </Typography>
+              </Box>
+              <Box display="flex" justifyContent="center" alignItems="center">
+                <Typography variant="caption">
+                  Confidence
+                </Typography>
+              </Box>
+              <Box display="flex" justifyContent="center" alignItems="center">
+                <Typography variant="caption">
+                  Feedback
+                </Typography>
+              </Box>
             </Box>
-            <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center">
-              <Typography variant="h6">
-              {ageBuckets(face.age)}
-              </Typography>
+            <Box width={"100%"} display="flex" flexDirection="row" justifyContent="space-evenly" alignItems="center">
+              <Box display="flex" justifyContent="center" alignItems="center">
+                <Typography variant="caption">
+                  {face.gender}
+                </Typography>
+              </Box>
+              <Box display="flex" justifyContent="center" alignItems="center">
+                {(face.gender == "Man" ? parseFloat(face["gender-confidence"]).toFixed(3) : (1 - face["gender-confidence"]).toFixed(3))}
+              </Box>
+              <Box display="flex" justifyContent="center" alignItems="center">
+                  <IconButton>
+                    <ThumbDownIcon size="small"/>
+                  </IconButton>
+              </Box>
             </Box>
-            
-          </Box>
-          <Box display="flex" flexDirection="row" justifyContent="space-evenly" alignItems="center">
-              <IconButton onClick={report}><ThumbUpIcon/></IconButton>
-              <IconButton onClick={report}><ThumbDownIcon/></IconButton>
-          </Box>
-          <Box display="flex" flexwrap="wrap" flexDirection="column" justifyContent="space-evenly" alignItems="center">
-              <Typography>
-              Gender Confidence: 
-                </Typography> 
-              {(face.gender == "Man" ? (face["gender-confidence"]) : (1 - face["gender-confidence"]))}
-          </Box>
-          {/* 
-          <Box display="flex" flexwrap="wrap" flexDirection="column" justifyContent="space-evenly" alignItems="center">
-          <Typography>
-          Face position:
-          </Typography>
-           X: {face.bbox.x}, Y: {face.bbox.y}, 
-           <Typography/>
-           Height: {face.bbox.h}, Width: {face.bbox.w}
-          </Box>
-          */}
+            <Box width={"100%"} display="flex" flexDirection="row" justifyContent="space-evenly" alignItems="center">
+              <Box display="flex" justifyContent="center" alignItems="center">
+                <Typography variant="caption">
+                  {ageBuckets(face.age)}
+                </Typography>
+              </Box>
+              <Box display="flex" justifyContent="center" alignItems="center">
+                <InfoIcon size="small" />
+              </Box>
+              <Box display="flex" justifyContent="center" alignItems="center">
+                  <IconButton size="small">
+                    <ThumbDownIcon size="small"/>
+                  </IconButton>
+              </Box>
+            </Box>
           </Box>
       </Card>
     ))
@@ -376,7 +391,15 @@ const FaceDemographic = () => {
     try {
     const json = JSON.stringify({ urls });
     console.log("Request: ", json)
+    /*
     const res = await axios.post('https://cors-everywhere-me.herokuapp.com/http://ec2-54-173-167-91.compute-1.amazonaws.com/predict', json, {
+    headers: {
+      // Overwrite Axios's automatically set Content-Type
+      'Content-Type': 'application/json'
+     }
+    });
+    */
+    const res = await axios.post('http://127.0.0.1/predict', json, {
     headers: {
       // Overwrite Axios's automatically set Content-Type
       'Content-Type': 'application/json'
