@@ -1,10 +1,8 @@
 import React from 'react';
 import axios from 'axios';
 import {useSnackbar} from "notistack"
-import Chart from "react-apexcharts";
 import ThumbUpIcon from '@material-ui/icons/ThumbUp';
 import ThumbDownIcon from '@material-ui/icons/ThumbDown';
-import ReactCrop from 'react-image-crop';
 import getCroppedImage from '../CropImageTest.js';
 import 'react-image-crop/dist/ReactCrop.css';
 import AddIcon from '@material-ui/icons/Add';
@@ -12,9 +10,10 @@ import CloseIcon from '@material-ui/icons/Close';
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
 import InfoIcon from '@material-ui/icons/Info';
+import { useHistory } from "react-router-dom";
+
 import {
   Card,
-  Link,
   Box,
   makeStyles,
   Avatar,
@@ -25,7 +24,6 @@ import {
   CircularProgress,
   IconButton
 } from '@material-ui/core';
-import { Filter } from '@material-ui/icons';
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -39,10 +37,11 @@ const FaceDemographic = () => {
   const [prediction, setPrediction] = React.useState(null)
   const [loadingPrediction, setLoadingPrediction] = React.useState(false)
   const [url, setUrl] = React.useState('')
-  const [maleAgePercentage, setMaleAgePercentage] = React.useState([0,0,0,0,0,0,0])
-  const [femaleAgePercentage, setFemaleAgePercentage] = React.useState([0,0,0,0,0,0,0])
+  const [maleAgePercentage, setMaleAgePercentage] = React.useState([0,0,0,0,0,0,0,0])
+  const [femaleAgePercentage, setFemaleAgePercentage] = React.useState([0,0,0,0,0,0,0,0])
   const [malePercentage, setMalePercentage] = React.useState(0)
   const [femalePercentage, setFemalePercentage] = React.useState(0)
+  const [testNum, setTestNum] = React.useState(0)
   const [urls, setUrls] = React.useState([])
   Highcharts.setOptions({credits: false})
   const highOptions = {
@@ -89,7 +88,6 @@ const FaceDemographic = () => {
     xAxis: {
       lineWidth: 0,
       gridLineWidth: 0,
-      width: "500",
       categories: ['-12', '13-17', '18-24', '25-34', '35-44', '45-54', '55-64',"65+"],
       title: {
           text: null
@@ -279,7 +277,10 @@ const FaceDemographic = () => {
    * urls
    */
   function addUrl(){
-    setUrls([...urls, url])
+    setPrediction(null)
+    if (url === "") throw Error("No url given")
+    let newUrls = url.split(",")
+    newUrls.forEach(url => setUrls((urls) => [...urls, url]))
     setUrl('')
   }
 
@@ -345,11 +346,26 @@ const FaceDemographic = () => {
             <Box width={"100%"} display="flex" flexDirection="row" justifyContent="space-evenly" alignItems="center">
               <Box display="flex" justifyContent="center" alignItems="center">
                 <Typography variant="caption">
+                  Face
+                </Typography>
+              </Box>
+              <Box display="flex" justifyContent="center" alignItems="center">
+                {face['face-confidence']}
+              </Box>
+              <Box display="flex" justifyContent="center" alignItems="center">
+                  <IconButton onClick={report}>
+                    <ThumbDownIcon size="small"/>
+                  </IconButton>
+              </Box>
+            </Box>
+            <Box width={"100%"} display="flex" flexDirection="row" justifyContent="space-evenly" alignItems="center">
+              <Box display="flex" justifyContent="center" alignItems="center">
+                <Typography variant="caption">
                   {face.gender}
                 </Typography>
               </Box>
               <Box display="flex" justifyContent="center" alignItems="center">
-                {(face.gender == "Man" ? parseFloat(face["gender-confidence"]).toFixed(3) : (1 - face["gender-confidence"]).toFixed(3))}
+                {(face.gender == "Man" ? parseFloat(face["gender-confidence"]).toFixed(2) : (1 - face["gender-confidence"]).toFixed(2))}
               </Box>
               <Box display="flex" justifyContent="center" alignItems="center">
                   <IconButton>
@@ -357,6 +373,7 @@ const FaceDemographic = () => {
                   </IconButton>
               </Box>
             </Box>
+            
             <Box width={"100%"} display="flex" flexDirection="row" justifyContent="space-evenly" alignItems="center">
               <Box display="flex" justifyContent="center" alignItems="center">
                 <Typography variant="caption">
@@ -381,6 +398,7 @@ const FaceDemographic = () => {
     enqueueSnackbar("Thanks for the feedback",{variant: 'success'})
   }
 
+
   async function requestDemographics() {
     if (urls.length == 0) {
       enqueueSnackbar("No url(s) were added",{variant: 'default'})
@@ -389,7 +407,7 @@ const FaceDemographic = () => {
     setLoadingPrediction(true)
     enqueueSnackbar("Request Sent",{variant: 'default'})
     try {
-    const json = JSON.stringify({ urls });
+    const json = JSON.stringify({ urls , test: (window.location.search ==='?test') ? true : false});
     console.log("Request: ", json)
     /*
     const res = await axios.post('https://cors-everywhere-me.herokuapp.com/http://ec2-54-173-167-91.compute-1.amazonaws.com/predict', json, {
@@ -424,6 +442,45 @@ const FaceDemographic = () => {
   }
   }
 
+  /**
+   * function get test images evaluate performance
+   */
+  function getTestPhotos() {
+    if (testNum < 16) return 
+    let sampleNum = Math.ceil(testNum/16)
+    const data = require('../mock/test_images.json');
+    let ageRanges = ['12-', '13-17','18-24','25-34','35-44','45-54','55-64','65+']
+    let sampledUrls = []
+    ageRanges.forEach(range => {
+      if (range == "65+") {
+        let samples = getRandom(data[range]["male"], sampleNum)
+        samples.forEach(sample => sampledUrls.push('https://learndemographicstest.s3.amazonaws.com/test/65%2B/male/' +sample))
+        samples = getRandom(data[range]["female"], sampleNum)
+        samples.forEach(sample => sampledUrls.push('https://learndemographicstest.s3.amazonaws.com/test/65%2B/female/' + sample))
+      } else {
+        let samples = getRandom(data[range]["male"], sampleNum)
+        samples.forEach(filename => sampledUrls.push('https://learndemographicstest.s3.amazonaws.com/test/' + range + '/male/' + filename))
+        samples = getRandom(data[range]["female"], sampleNum)
+        samples.forEach(filename => sampledUrls.push('https://learndemographicstest.s3.amazonaws.com/test/' + range + '/female/' + filename))
+      }
+    })
+    setUrls(sampledUrls)
+  }
+
+  function getRandom(arr, n) {
+    var result = new Array(n),
+        len = arr.length,
+        taken = new Array(len);
+    if (n > len)
+        throw new RangeError("getRandom: more elements taken than available");
+    while (n--) {
+        var x = Math.floor(Math.random() * len);
+        result[n] = arr[x in taken ? taken[x] : x];
+        taken[x] = --len in taken ? taken[len] : len;
+    }
+    return result;
+  }
+
   return (
     <div style={{display: "flex", width: "100%", justifyContent:"center"}}>
       <div style={{display: "flex", height: "775px", flexDirection: "column", width:"1240px", maxWidth: "1240px"}}>
@@ -439,10 +496,30 @@ const FaceDemographic = () => {
           hiddenLabel InputProps={{ disableUnderline: true }} style={{width: "30em"}} variant="filled" placeholder="Enter web image url"/>
             <IconButton onClick={addUrl} style={{marginLeft: ".25em", color: "black"}}> <AddIcon/> </IconButton>
             { (!loadingPrediction) ? 
-            <Button disableElevation onClick={requestDemographics} style={{marginLeft: "2em"}} variant="contained" > <strong>Get Demographics</strong></Button>
+            <React.Fragment>
+              <Button disableElevation onClick={requestDemographics} style={{marginLeft: "2em"}} variant="contained" > <strong>Get Demographics</strong></Button>
+              <Button disableElevation onClick={() => {
+                setUrls([])
+                setPrediction(null)
+              }} style={{marginLeft: "1em"}} variant="contained" > <strong>Clear</strong></Button>
+              { (window.location.search === "?test") ?
+              <>
+              <TextField value={testNum}
+                onChange={
+                  (e) => {
+                    setTestNum(e.target.value)
+                  }
+                }
+                hiddenLabel InputProps={{ disableUnderline: true }} style={{width: "5em", marginLeft: "1em"}} variant="filled" placeholder="number"/>
+              <Button disableElevation onClick={getTestPhotos} style={{marginLeft: "1em"}} variant="contained" > <strong>Test</strong></Button>
+             </>
+              : ""}
+              </React.Fragment>
             : <CircularProgress style={{color:"black", marginLeft: "1em"}} />}
             </Box>
-            <Typography variant="caption">*Gender Prediction: This kind of prediction is not designed to categorize a person’s gender identity, and you shouldn't use Learn Demographics to make such a determination.
+            
+            <Typography style={{textDecoration: "underline"}} variant="caption"><strong><span style={{color: "red"}} >*</span>Learn Demographics is still in development and the results received from this application still need to be tested and fine tuned.</strong></Typography>
+            <Typography variant="caption" style={{marginBottom: "10px"}}>*Gender Prediction: This kind of prediction is not designed to categorize a person’s gender identity, and you shouldn't use Learn Demographics to make such a determination.
             LearnDemographics use cases are where aggregate gender distribution statistics need to be analyzed without identifying specific users.</Typography>
             </Box>
         </Paper>
