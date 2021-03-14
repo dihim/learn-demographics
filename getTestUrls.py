@@ -14,6 +14,11 @@ import pandas as pd
 from faceDetectionDataset import FaceDetectionDataset
 
 import os
+
+for x in range(8):
+  print(x)
+
+r"""
 def ageIndex(age):
         # 12 and under, 13-17, 18-24, 25-34, 35-44, 45-54, 55-64, 65+
         if age < 13:
@@ -50,7 +55,7 @@ for x in ageRanges:
 
 with open('test_images.json', 'w') as outfile:
     json.dump(images, outfile)
-
+"""
 """
 for x in ageRanges:
   male_files = [f for f in os.listdir(directory + '\\' + x + '\\' + 'male')]

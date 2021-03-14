@@ -446,10 +446,10 @@ const FaceDemographic = () => {
    * function get test images evaluate performance
    */
   function getTestPhotos() {
-    if (testNum < 16) return 
-    let sampleNum = Math.ceil(testNum/16)
+    if (testNum < 14) return 
+    let sampleNum = Math.ceil(testNum/14)
     const data = require('../mock/test_images.json');
-    let ageRanges = ['12-', '13-17','18-24','25-34','35-44','45-54','55-64','65+']
+    let ageRanges = ['13-17','18-24','25-34','35-44','45-54','55-64','65+']
     let sampledUrls = []
     ageRanges.forEach(range => {
       if (range == "65+") {
@@ -518,7 +518,7 @@ const FaceDemographic = () => {
             : <CircularProgress style={{color:"black", marginLeft: "1em"}} />}
             </Box>
             
-            <Typography style={{textDecoration: "underline"}} variant="caption"><strong><span style={{color: "red"}} >*</span>Learn Demographics is still in development and the results received from this application still need to be tested and fine tuned.</strong></Typography>
+            <Typography style={{textDecoration: "underline"}} variant="caption"><strong>Learn Demographics is still in development and the results received from this application still need to be tested and fine tuned.</strong></Typography>
             <Typography variant="caption" style={{marginBottom: "10px"}}>*Gender Prediction: This kind of prediction is not designed to categorize a person’s gender identity, and you shouldn't use Learn Demographics to make such a determination.
             LearnDemographics use cases are where aggregate gender distribution statistics need to be analyzed without identifying specific users.</Typography>
             </Box>

@@ -165,15 +165,27 @@ def get_prediction(testurls = None):
                     age_logger.error(id + ". Predicted: " + str(face['age']) + ". Correct Label: " + x['labelAgeRange'] + ". Url:" + x["url"] + ". Bbox: " + str(face["bbox"]) +".")
                     
 
-            # Gender Stats
+        # Gender Eval
         genderAccuracy = genderCorrect / len(images)
-        precision = trueGenderMale / (trueGenderMale + falseGenderMale)
-        recall = trueGenderMale / (trueGenderMale + falseGenderFemale)
+        precisionMale = trueGenderMale / (trueGenderMale + falseGenderMale)
+        recallMale = trueGenderMale / (trueGenderMale + falseGenderFemale)
+        recallFemale = trueGenderFemale / (trueGenderFemale + falseGenderMale)
+        precisionFemale = trueGenderFemale / (trueGenderFemale + falseGenderFemale)
         confusionMatrix = [[trueGenderMale, falseGenderMale], [falseGenderFemale, trueGenderFemale]]
-        genderEvaluation = {"totalNumGenderMale": totalGenderMale, "totalNumGenderFemale": totalGenderFemale, "genderAccuracy": "{:.2f}".format(genderAccuracy), "precision": "{:.2f}".format(precision), "recall": "{:.2f}".format(recall), "confusionMatrix": confusionMatrix}
-        ageAccuracy = ageCorrect / len(images)
+        genderEvaluation = {"totalNumGenderMale": totalGenderMale, "totalNumGenderFemale": totalGenderFemale, "genderAccuracy": "{:.2f}".format(genderAccuracy), "precisionMale": "{:.2f}".format(precisionMale), "recallMale": "{:.2f}".format(recallMale), "precisionFemale": "{:.2f}".format(precisionFemale), "recallFemale": "{:.2f}".format(recallFemale), "confusionMatrix": confusionMatrix}
         systemAccuracy = correct / len(images)
-        ageEvaluation = {"ageAccuracy": "{:.2f}".format(ageAccuracy), "ageConfusionMatrix": ageConfusionMatrix.tolist()}
+
+        # Age Evaluation
+        ageAccuracy = ageCorrect / len(images) 
+        precision = [None] * 8
+        recall = [None] * 8
+
+        # Calc precision and recall for age range
+        for x in range(8):
+            recall[x] = "{:.2f}".format(ageConfusionMatrix[x][x] / (np.sum(ageConfusionMatrix[:,x]) if np.sum(ageConfusionMatrix[:,x]) != 0 else 1))
+            precision[x] = "{:.2f}".format(ageConfusionMatrix[x][x] / (np.sum(ageConfusionMatrix[x,:]) if np.sum(ageConfusionMatrix[x,:]) != 0 else 1))
+
+        ageEvaluation = {"ageAccuracy": "{:.2f}".format(ageAccuracy), "ageConfusionMatrix": ageConfusionMatrix.tolist(), "precision": precision, "recall": recall}
         return {"systemAccucray": "{:.2f}".format(systemAccuracy), "genderEvaluation": genderEvaluation, "ageEvaluation": ageEvaluation}
 
 
