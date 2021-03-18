@@ -410,7 +410,7 @@ const FaceDemographic = () => {
     const json = JSON.stringify({ urls , test: (window.location.search ==='?test') ? true : false});
     console.log("Request: ", json)
     /*
-    const res = await axios.post('https://cors-everywhere-me.herokuapp.com/http://ec2-54-173-167-91.compute-1.amazonaws.com/predict', json, {
+    const res = await axios.post(''https://cors-everywhere-me.herokuapp.com/http://ec2-54-152-74-164.compute-1.amazonaws.com/predict', json, {
     headers: {
       // Overwrite Axios's automatically set Content-Type
       'Content-Type': 'application/json'
@@ -446,10 +446,10 @@ const FaceDemographic = () => {
    * function get test images evaluate performance
    */
   function getTestPhotos() {
-    if (testNum < 14) return 
-    let sampleNum = Math.ceil(testNum/14)
+    if (testNum < 16) return 
+    let sampleNum = Math.ceil(testNum/16)
     const data = require('../mock/test_images.json');
-    let ageRanges = ['13-17','18-24','25-34','35-44','45-54','55-64','65+']
+    let ageRanges = ['12-','13-17','18-24','25-34','35-44','45-54','55-64','65+']
     let sampledUrls = []
     ageRanges.forEach(range => {
       if (range == "65+") {
