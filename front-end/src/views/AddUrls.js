@@ -417,7 +417,7 @@ const FaceDemographic = () => {
      }
     });
     */
-    const res = await axios.post('https://cors-everywhere-me.herokuapp.com/ec2-34-205-65-73.compute-1.amazonaws.com/predict', json, {
+    const res = await axios.post('https://cors-everywhere-me.herokuapp.com/ec2-54-89-194-235.compute-1.amazonaws.com/predict', json, {
     headers: {
       // Overwrite Axios's automatically set Content-Type
       'Content-Type': 'application/json'
