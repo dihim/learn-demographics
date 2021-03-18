@@ -446,8 +446,8 @@ const FaceDemographic = () => {
    * function get test images evaluate performance
    */
   function getTestPhotos() {
-    if (testNum < 14) return 
-    let sampleNum = Math.ceil(testNum/14)
+    if (testNum < 16) return 
+    let sampleNum = Math.ceil(testNum/16)
     const data = require('../mock/test_images.json');
     let ageRanges = ['12-','13-17','18-24','25-34','35-44','45-54','55-64','65+']
     let sampledUrls = []
